@@ -693,7 +693,7 @@
             const tabs = document.querySelectorAll('.tab');
             const sections = document.querySelectorAll('.catalog-section, .cart-section, .history-section, .reviews-section');
 
-            // Discord webhook URL (вставь свой)
+            // Discord webhook URL
             const discordWebhookUrl = 'https://discord.com/api/webhooks/1372290951565017201/gbPZqGrNeZUXlr0TH2ftVQwxDi70xtrPtqertUrHq6aOgT4rYBT6BICnRLAHvHgoPSjz';
             // Telegram Bot Token и Chat ID
             const telegramBotToken = '7943317013:AAHfZ__FYakxqBHqdOInE-17uXzU2MW8dhU';
@@ -862,16 +862,23 @@
                 // Отправка в Discord
                 const itemsList = cart.map(item => `${item.name} (${item.price} тг)`).join(', ');
                 const discordMessage = {
-                    content: `${nickname} купил ${itemsList}`
+                    content: `${nickname} купил: ${itemsList} (Итого: ${total} тг)`
                 };
                 fetch(discordWebhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(discordMessage)
                 }).then(response => {
-                    if (!response.ok) console.error('Ошибка отправки в Discord:', response.status);
-                    else console.log('Сообщение отправлено в Discord:', discordMessage.content);
-                }).catch(error => console.error('Ошибка fetch:', error));
+                    if (!response.ok) {
+                        console.error('Ошибка отправки в Discord:', response.status);
+                        alert('Ошибка при отправке уведомления о покупке в Discord.');
+                    } else {
+                        console.log('Уведомление о покупке отправлено в Discord:', discordMessage.content);
+                    }
+                }).catch(error => {
+                    console.error('Ошибка fetch:', error);
+                    alert('Ошибка при отправке уведомления о покупке. Проверьте подключение.');
+                });
 
                 // Очистка корзины
                 cart = [];
@@ -939,7 +946,7 @@
 
                         if (!response.ok) {
                             console.error('Ошибка отправки в Telegram:', response.status);
-                            alert('Ошибка при отправке отзыва. Попробуйте позже.');
+                            alert('Ошибка при отправке отзыва в Telegram. Попробуйте позже.');
                             return;
                         }
 
@@ -957,7 +964,7 @@
 
                         if (!response.ok) {
                             console.error('Ошибка отправки в Telegram:', response.status);
-                            alert('Ошибка при отправке отзыва. Попробуйте позже.');
+                            alert('Ошибка при отправке отзыва в Telegram. Попробуйте позже.');
                             return;
                         }
 
