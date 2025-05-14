@@ -1,0 +1,915 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Каталог Dead Rails с поиском, фильтрами, корзиной и историей покупок.">
+    <meta name="keywords" content="Dead Rails, классы, поезда, магазин">
+    <title>Dead Rails</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0f0f;
+            color: #f7f7f7;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        .nickname-header {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: #f7f7f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nickname-header span {
+            color: #047857;
+            font-weight: 600;
+        }
+        .change-nickname {
+            background: none;
+            border: none;
+            color: #047857;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .change-nickname:hover {
+            color: #035f44;
+        }
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            color: #f7f7f7;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .tab.active, .tab:hover {
+            background: #047857;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .controls input, .controls select {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #262626;
+            color: #f7f7f7;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 120px;
+        }
+        .cart-tab {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #047857;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+        .cart-tab:hover {
+            background: #035f44;
+        }
+        .cart-tab span {
+            background: #f7f7f7;
+            color: #047857;
+            border-radius: 50%;
+            padding: 2px 6px;
+            margin-left: 5px;
+        }
+        .category {
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 1.6em;
+            color: #047857;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-bottom: 5px;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 2px;
+            background: #047857;
+        }
+        .item-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .item {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .item:hover {
+            transform: translateY(-3px);
+            background: #222222;
+        }
+        .item h3 {
+            font-size: 1.1em;
+            color: #f7f7f7;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .item p {
+            font-size: 1em;
+            color: #047857;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .item button {
+            width: 100%;
+            padding: 8px;
+            background: #047857;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .item button:hover {
+            background: #035f44;
+        }
+        .catalog-section {
+            display: none;
+        }
+        .catalog-section.active {
+            display: block;
+        }
+        .cart-section, .history-section {
+            display: none;
+        }
+        .cart-section.active, .history-section.active {
+            display: block;
+        }
+        .cart-items, .history-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .cart-item, .history-item {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .cart-item h3, .history-item h3 {
+            font-size: 1.1em;
+            color: #f7f7f7;
+            font-weight: 500;
+        }
+        .cart-item p, .history-item p {
+            font-size: 1em;
+            color: #047857;
+            font-weight: 600;
+        }
+        .cart-item .remove-from-cart {
+            padding: 6px 12px;
+            background: #b91c1c;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .cart-item .remove-from-cart:hover {
+            background: #991b1b;
+        }
+        .cart-empty, .history-empty {
+            font-size: 1.1em;
+            text-align: center;
+            color: #a3a3a3;
+        }
+        .cart-total {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 15px 0;
+            color: #047857;
+            text-align: right;
+        }
+        .cart-checkout {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #047857;
+            color: #f7f7f7;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .cart-checkout:hover {
+            background: #035f44;
+        }
+        .clear-history {
+            padding: 10px 20px;
+            background: #b91c1c;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            display: block;
+            margin: 15px auto;
+            transition: background 0.2s;
+        }
+        .clear-history:hover {
+            background: #991b1b;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal-content h3 {
+            color: #047857;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 6px;
+            background: #262626;
+            color: #f7f7f7;
+            font-size: 0.9em;
+        }
+        .modal-content input[type="checkbox"] {
+            margin-right: 8px;
+            accent-color: #047857;
+        }
+        .modal-content label {
+            font-size: 0.9em;
+            color: #f7f7f7;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            background: #047857;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .modal-content button:disabled {
+            background: #3a4a44;
+            cursor: not-allowed;
+        }
+        .modal-content button:not(:disabled):hover {
+            background: #035f44;
+        }
+        .modal-content .warning {
+            color: #b91c1c;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .modal-content .close-button {
+            display: none;
+            margin-top: 15px;
+        }
+        .modal-content .close-button.active {
+            display: inline-block;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #a3a3a3;
+            font-size: 0.9em;
+            margin-top: 40px;
+        }
+        footer a {
+            color: #047857;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .controls input, .controls select {
+                width: 100%;
+            }
+            h2 {
+                font-size: 1.4em;
+            }
+            .item-list, .cart-items, .history-items {
+                grid-template-columns: 1fr;
+            }
+            .item, .cart-item, .history-item {
+                padding: 12px;
+            }
+            .cart-tab {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+            }
+            .cart-total {
+                text-align: center;
+            }
+            .modal-content {
+                padding: 15px;
+            }
+            .nickname-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            footer a {
+                display: inline-block;
+                margin: 5px 10px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="modal" id="nickname-modal">
+        <div class="modal-content">
+            <h3>Введите ваш ник</h3>
+            <p class="warning">Если ты не введёшь ник, то будут проблемы, и мы не несём за это ответственность.</p>
+            <input type="text" id="nickname-input" placeholder="Ваш ник...">
+            <label>
+                <input type="checkbox" id="accept-terms"> Принять условие
+            </label>
+            <button id="submit-nickname" disabled>Подтвердить</button>
+        </div>
+    </div>
+
+    <div class="modal" id="warning-modal">
+        <div class="modal-content">
+            <h3>ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ</h3>
+            <p>После покупки вас переведёт в Telegram, и это важно, чтобы мы могли выдать купленное.</p>
+            <button id="close-warning" class="close-button">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="nickname-header">
+            Ваш ник: <span id="nickname-display">Гость</span>
+            <button class="change-nickname">Сменить ник</button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="catalog">Каталог</div>
+            <div class="tab" data-tab="cart">Корзина</div>
+            <div class="tab" data-tab="history">История</div>
+        </div>
+
+        <div class="cart-tab" data-tab="cart">
+            Корзина <span id="cart-count">0</span>
+        </div>
+
+        <div class="catalog-section active">
+            <div class="controls">
+                <input type="text" id="search" placeholder="Поиск по названию...">
+                <select id="category">
+                    <option value="all">Все категории</option>
+                    <option value="classes">Классы</option>
+                    <option value="trains">Поезда</option>
+                </select>
+                <select id="sort">
+                    <option value="default">По умолчанию</option>
+                    <option value="price-asc">Цена: по возрастанию</option>
+                    <option value="price-desc">Цена: по убыванию</option>
+                    <option value="name">По алфавиту</option>
+                </select>
+            </div>
+
+            <div class="category" id="classes">
+                <h2>Классы</h2>
+                <div class="item-list">
+                    <div class="item" data-name="Доктор" data-price="26" data-category="classes">
+                        <h3>Доктор</h3>
+                        <p>26 тг</p>
+                        <button class="add-to-cart" data-name="Доктор" data-price="26">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Майнер" data-price="30" data-category="classes">
+                        <h3>Майнер</h3>
+                        <p>30 тг</p>
+                        <button class="add-to-cart" data-name="Майнер" data-price="30">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Музыкант" data-price="30" data-category="classes">
+                        <h3>Музыкант</h3>
+                        <p>30 тг</p>
+                        <button class="add-to-cart" data-name="Музыкант" data-price="30">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Арсонист" data-price="40" data-category="classes">
+                        <h3>Арсонист</h3>
+                        <p>40 тг</p>
+                        <button class="add-to-cart" data-name="Арсонист" data-price="40">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Мастер упаковки" data-price="55" data-category="classes">
+                        <h3>Мастер упаковки</h3>
+                        <p>55 тг</p>
+                        <button class="add-to-cart" data-name="Мастер упаковки" data-price="55">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Некромант" data-price="55" data-category="classes">
+                        <h3>Некромант</h3>
+                        <p>55 тг</p>
+                        <button class="add-to-cart" data-name="Некромант" data-price="55">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Аламо" data-price="80" data-category="classes">
+                        <h3>Аламо</h3>
+                        <p>80 тг</p>
+                        <button class="add-to-cart" data-name="Аламо" data-price="80">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Ковбой" data-price="75" data-category="classes">
+                        <h3>Ковбой</h3>
+                        <p>75 тг</p>
+                        <button class="add-to-cart" data-name="Ковбой" data-price="75">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Кондуктор" data-price="75" data-category="classes">
+                        <h3>Кондуктор</h3>
+                        <p>75 тг</p>
+                        <button class="add-to-cart" data-name="Кондуктор" data-price="75">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Высокий роллер" data-price="80" data-category="classes">
+                        <h3>Высокий роллер</h3>
+                        <p>80 тг</p>
+                        <button class="add-to-cart" data-name="Высокий роллер" data-price="80">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Вереволк" data-price="80" data-category="classes">
+                        <h3>Вереволк</h3>
+                        <p>80 тг</p>
+                        <button class="add-to-cart" data-name="Вереволк" data-price="80">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Выживший" data-price="100" data-category="classes">
+                        <h3>Выживший</h3>
+                        <p>100 тг</p>
+                        <button class="add-to-cart" data-name="Выживший" data-price="100">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Священник" data-price="100" data-category="classes">
+                        <h3>Священник</h3>
+                        <p>100 тг</p>
+                        <button class="add-to-cart" data-name="Священник" data-price="100">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Вампир" data-price="103" data-category="classes">
+                        <h3>Вампир</h3>
+                        <p>103 тг</p>
+                        <button class="add-to-cart" data-name="Вампир" data-price="103">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Зомби" data-price="105" data-category="classes">
+                        <h3>Зомби</h3>
+                        <p>105 тг</p>
+                        <button class="add-to-cart" data-name="Зомби" data-price="105">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Железный человек" data-price="155" data-category="classes">
+                        <h3>Железный человек</h3>
+                        <p>155 тг</p>
+                        <button class="add-to-cart" data-name="Железный человек" data-price="155">Добавить</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category" id="trains">
+                <h2>Поезда</h2>
+                <div class="item-list">
+                    <div class="item" data-name="Крупный рогатый скот" data-price="225" data-category="trains">
+                        <h3>Крупный рогатый скот</h3>
+                        <p>225 тг</p>
+                        <button class="add-to-cart" data-name="Крупный рогатый скот" data-price="225">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Золотая лихорадка" data-price="300" data-category="trains">
+                        <h3>Золотая лихорадка</h3>
+                        <p>300 тг</p>
+                        <button class="add-to-cart" data-name="Золотая лихорадка" data-price="300">Добавить</button>
+                    </div>
+                    <div class="item" data-name="Бронированный" data-price="320" data-category="trains">
+                        <h3>Бронированный</h3>
+                        <p>320 тг</p>
+                        <button class="add-to-cart" data-name="Бронированный" data-price="320">Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-section">
+            <h2>Корзина</h2>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-total">Итого: <span id="cart-total">0 тг</span></div>
+            <a href="https://t.me/Aibekxcdm815" target="_blank" class="cart-checkout hidden" id="cart-checkout">Оформить заказ</a>
+        </div>
+
+        <div class="history-section">
+            <h2>История покупок</h2>
+            <div class="history-items" id="history-items"></div>
+            <button class="clear-history hidden" id="clear-history">Очистить историю</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Temirlan, Bekzhan | <a href="https://t.me/Aibekxcdm815">Telegram</a> | <a href="https://tiktok.com/@deadrailsshop04">TikTok</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
+            const nicknameModal = document.getElementById('nickname-modal');
+            const warningModal = document.getElementById('warning-modal');
+            const nicknameInput = document.getElementById('nickname-input');
+            const acceptTerms = document.getElementById('accept-terms');
+            const submitNickname = document.getElementById('submit-nickname');
+            const closeWarning = document.getElementById('close-warning');
+            const nicknameDisplay = document.getElementById('nickname-display');
+            const changeNickname = document.querySelector('.change-nickname');
+            const cartCount = document.getElementById('cart-count');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            const cartCheckout = document.getElementById('cart-checkout');
+            const historyItemsContainer = document.getElementById('history-items');
+            const clearHistory = document.getElementById('clear-history');
+            const searchInput = document.getElementById('search');
+            const categorySelect = document.getElementById('category');
+            const sortSelect = document.getElementById('sort');
+            const tabs = document.querySelectorAll('.tab');
+            const sections = document.querySelectorAll('.catalog-section, .cart-section, .history-section');
+
+            // Вставь свой Discord webhook URL здесь
+            const discordWebhookUrl = 'YOUR_DISCORD_WEBHOOK_URL';
+
+            // Функция для обновления отображения ника
+            function updateNicknameDisplay() {
+                const nickname = localStorage.getItem('nickname') || 'Гость';
+                nicknameDisplay.textContent = nickname;
+                console.log('Ник обновлён:', nickname);
+            }
+
+            // Проверка ника при загрузке
+            if (!localStorage.getItem('nickname')) {
+                nicknameModal.style.display = 'flex';
+            } else {
+                nicknameModal.style.display = 'none';
+                warningModal.style.display = 'none';
+                updateNicknameDisplay();
+            }
+
+            // Активация кнопки "Подтвердить" при отметке чекбокса
+            acceptTerms.addEventListener('change', () => {
+                submitNickname.disabled = !acceptTerms.checked;
+                console.log('Чекбокс условий:', acceptTerms.checked);
+            });
+
+            // Подтверждение ника
+            function handleSubmitNickname() {
+                const nickname = nicknameInput.value.trim();
+                console.log('Клик/тач по Подтвердить, ник:', nickname);
+                if (nickname && acceptTerms.checked) {
+                    try {
+                        localStorage.setItem('nickname', nickname);
+                        nicknameModal.style.display = 'none';
+                        warningModal.style.display = 'flex';
+                        nicknameInput.value = '';
+                        acceptTerms.checked = false;
+                        submitNickname.disabled = true;
+                        updateNicknameDisplay();
+                        console.log('Ник сохранён в localStorage:', localStorage.getItem('nickname'));
+                        // Показ кнопки "Закрыть" через 5 секунд
+                        setTimeout(() => {
+                            closeWarning.classList.add('active');
+                        }, 5000);
+                    } catch (e) {
+                        console.error('Ошибка сохранения ника:', e);
+                        alert('Ошибка при сохранении ника. Попробуйте снова.');
+                    }
+                } else if (!nickname) {
+                    alert('Пожалуйста, введите ник!');
+                } else {
+                    alert('Пожалуйста, примите условие!');
+                }
+            }
+
+            submitNickname.addEventListener('click', handleSubmitNickname);
+            submitNickname.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleSubmitNickname();
+            });
+
+            // Поддержка Enter для подтверждения
+            nicknameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSubmitNickname();
+                }
+            });
+
+            // Закрытие предупреждения
+            closeWarning.addEventListener('click', () => {
+                warningModal.style.display = 'none';
+                console.log('Предупреждение закрыто');
+            });
+
+            closeWarning.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                warningModal.style.display = 'none';
+                console.log('Предупреждение закрыто (touch)');
+            });
+
+            // Смена ника
+            changeNickname.addEventListener('click', () => {
+                nicknameModal.style.display = 'flex';
+                console.log('Открыто окно смены ника');
+            });
+
+            // Обновление счётчика корзины
+            function updateCartCount() {
+                cartCount.textContent = cart.length;
+            }
+
+            // Обновление отображения корзины
+            function updateCartDisplay() {
+                cartItemsContainer.innerHTML = '';
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = '<p class="cart-empty">Корзина пуста</p>';
+                    cartCheckout.classList.add('hidden');
+                } else {
+                    cart.forEach((item, index) => {
+                        const cartItem = document.createElement('div');
+                        cartItem.className = 'cart-item';
+                        cartItem.innerHTML = `
+                            <h3>${item.name}</h3>
+                            <p>${item.price} тг</p>
+                            <button class="remove-from-cart" data-index="${index}">Удалить</button>
+                        `;
+                        cartItemsContainer.appendChild(cartItem);
+                    });
+                    cartCheckout.classList.remove('hidden');
+                }
+                const total = cart.reduce((sum, item) => sum + item.price, 0);
+                cartTotal.textContent = `${total} тг`;
+            }
+
+            // Обновление истории покупок
+            function updateHistoryDisplay() {
+                historyItemsContainer.innerHTML = '';
+                if (purchaseHistory.length === 0) {
+                    historyItemsContainer.innerHTML = '<p class="history-empty">История пуста</p>';
+                    clearHistory.classList.add('hidden');
+                } else {
+                    purchaseHistory.forEach((purchase, index) => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        const itemList = purchase.items.map(item => `${item.name} (${item.price} тг)`).join(', ');
+                        historyItem.innerHTML = `
+                            <h3>Покупка #${index + 1}</h3>
+                            <p>Дата: ${purchase.date}</p>
+                            <p>Ник: ${purchase.nickname}</p>
+                            <p>Товары: ${itemList}</p>
+                            <p>Итого: ${purchase.total} тг</p>
+                        `;
+                        historyItemsContainer.appendChild(historyItem);
+                    });
+                    clearHistory.classList.remove('hidden');
+                }
+            }
+
+            // Добавление в корзину
+            function addToCart(name, price) {
+                cart.push({ name, price });
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                updateCartDisplay();
+            }
+
+            // Удаление из корзины
+            function removeFromCart(index) {
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                updateCartDisplay();
+            }
+
+            // Оформление заказа
+            function checkout() {
+                if (cart.length === 0) return;
+                const nickname = localStorage.getItem('nickname') || 'Гость';
+                const total = cart.reduce((sum, item) => sum + item.price, 0);
+                const date = new Date().toLocaleString('ru-RU');
+                const purchase = { nickname, items: [...cart], total, date };
+                purchaseHistory.push(purchase);
+                localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
+
+                // Отправка в Discord
+                const itemsList = cart.map(item => `${item.name} (${item.price} тг)`).join(', ');
+                const discordMessage = {
+                    content: `${nickname} купил ${itemsList}`
+                };
+                fetch(discordWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordMessage)
+                }).then(response => {
+                    if (!response.ok) console.error('Ошибка отправки в Discord:', response.status);
+                    else console.log('Сообщение отправлено в Discord:', discordMessage.content);
+                }).catch(error => console.error('Ошибка fetch:', error));
+
+                // Очистка корзины
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                updateCartDisplay();
+                updateHistoryDisplay();
+            }
+
+            // Очистка истории
+            function clearPurchaseHistory() {
+                purchaseHistory = [];
+                localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
+                updateHistoryDisplay();
+            }
+
+            // Фильтрация товаров
+            function filterItems() {
+                const search = searchInput.value.toLowerCase();
+                const category = categorySelect.value;
+                const items = document.querySelectorAll('.item');
+
+                items.forEach(item => {
+                    const name = item.dataset.name.toLowerCase();
+                    const itemCategory = item.dataset.category;
+                    const matchesSearch = name.includes(search);
+                    const matchesCategory = category === 'all' || itemCategory === category;
+                    item.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+                });
+            }
+
+            // Сортировка товаров
+            function sortItems() {
+                const sort = sortSelect.value;
+                const itemLists = document.querySelectorAll('.item-list');
+                itemLists.forEach(list => {
+                    const items = Array.from(list.children);
+                    items.sort((a, b) => {
+                        const nameA = a.dataset.name;
+                        const nameB = b.dataset.name;
+                        const priceA = parseFloat(a.dataset.price);
+                        const priceB = parseFloat(b.dataset.price);
+                        if (sort === 'price-asc') return priceA - priceB;
+                        if (sort === 'price-desc') return priceB - priceA;
+                        if (sort === 'name') return nameA.localeCompare(nameB);
+                        return 0;
+                    });
+                    list.innerHTML = '';
+                    items.forEach(item => list.appendChild(item));
+                });
+            }
+
+            // Переключение вкладок
+            function switchTab(tabName) {
+                tabs.forEach(tab => tab.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.querySelector(`.${tabName}-section`).classList.add('active');
+            }
+
+            // Обработчики
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', () => {
+                    const name = button.dataset.name;
+                    const price = parseFloat(button.dataset.price);
+                    addToCart(name, price);
+                });
+            });
+
+            cartItemsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-from-cart')) {
+                    const index = parseInt(e.target.dataset.index);
+                    removeFromCart(index);
+                }
+            });
+
+            cartCheckout.addEventListener('click', checkout);
+
+            clearHistory.addEventListener('click', clearPurchaseHistory);
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchTab(tab.dataset.tab);
+                });
+            });
+
+            searchInput.addEventListener('input', filterItems);
+            categorySelect.addEventListener('change', filterItems);
+            sortSelect.addEventListener('change', sortItems);
+
+            updateCartCount();
+            updateCartDisplay();
+            updateHistoryDisplay();
+        });
+    </script>
+</body>
+</html>
