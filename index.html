@@ -325,6 +325,18 @@
         .reviews-form button:not(:disabled):hover {
             background: #035f44;
         }
+        .reviews-channel {
+            font-size: 0.9em;
+            color: #a3a3a3;
+            margin-bottom: 15px;
+        }
+        .reviews-channel a {
+            color: #047857;
+            text-decoration: none;
+        }
+        .reviews-channel a:hover {
+            text-decoration: underline;
+        }
         .modal {
             position: fixed;
             top: 0;
@@ -453,13 +465,6 @@
                 align-items: flex-start;
                 gap: 5px;
             }
-            footer a {
-                display: inline-block;
-                margin: 5px 10px;
-            }
-            .tabs {
-                gap: 10px;
-            }
             .reviews-form {
                 padding: 15px;
             }
@@ -468,6 +473,10 @@
             }
             .reviews-form .image-preview {
                 max-height: 150px;
+            }
+            .reviews-channel {
+                font-size: 0.8em;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -650,6 +659,7 @@
 
         <div class="reviews-section">
             <h2>Отзывы</h2>
+            <p class="reviews-channel">Наш канал с отзывами: <a href="https://t.me/DeadRailsReviews" target="_blank">МёртвыеРельсыОтзывы</a></p>
             <div class="reviews-form">
                 <textarea id="review-text" placeholder="Напишите ваш отзыв..."></textarea>
                 <div class="file-input-container">
