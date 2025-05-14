@@ -1,49 +1,10 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Каталог Dead Rails с поиском, фильтрами, корзиной и историей покупок.">
-    <meta name="keywords" content="Dead Rails, классы, поезда, магазин">
+    <meta name="description" content="Каталог Dead Rails с поиском, фильтрами, корзиной, историей покупок и отзывами.">
+    <meta name="keywords" content="Dead Rails, классы, поезда, магазин, отзывы">
     <title>Dead Rails</title>
     <style>
         * {
@@ -90,6 +51,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .tab {
             padding: 10px 20px;
@@ -210,16 +172,10 @@
         .item button:hover {
             background: #035f44;
         }
-        .catalog-section {
+        .catalog-section, .cart-section, .history-section, .reviews-section {
             display: none;
         }
-        .catalog-section.active {
-            display: block;
-        }
-        .cart-section, .history-section {
-            display: none;
-        }
-        .cart-section.active, .history-section.active {
+        .catalog-section.active, .cart-section.active, .history-section.active, .reviews-section.active {
             display: block;
         }
         .cart-items, .history-items {
@@ -301,6 +257,42 @@
         .clear-history:hover {
             background: #991b1b;
         }
+        .reviews-form {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .reviews-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #262626;
+            color: #f7f7f7;
+            font-size: 0.9em;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+        .reviews-form button {
+            padding: 10px 20px;
+            background: #047857;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .reviews-form button:disabled {
+            background: #3a4a44;
+            cursor: not-allowed;
+        }
+        .reviews-form button:not(:disabled):hover {
+            background: #035f44;
+        }
         .modal {
             position: fixed;
             top: 0;
@@ -327,7 +319,7 @@
         .modal-content h3 {
             color: #047857;
             margin-bottom: 15px;
-            font-size: 1.4em;
+ verksamhet: font-size: 1.4em;
         }
         .modal-content input[type="text"] {
             width: 100%;
@@ -433,6 +425,15 @@
                 display: inline-block;
                 margin: 5px 10px;
             }
+            .tabs {
+                gap: 10px;
+            }
+            .reviews-form {
+                padding: 15px;
+            }
+            .reviews-form textarea {
+                min-height: 80px;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -468,6 +469,7 @@
             <div class="tab active" data-tab="catalog">Каталог</div>
             <div class="tab" data-tab="cart">Корзина</div>
             <div class="tab" data-tab="history">История</div>
+            <div class="tab" data-tab="reviews">Отзывы</div>
         </div>
 
         <div class="cart-tab" data-tab="cart">
@@ -610,6 +612,14 @@
             <div class="history-items" id="history-items"></div>
             <button class="clear-history hidden" id="clear-history">Очистить историю</button>
         </div>
+
+        <div class="reviews-section">
+            <h2>Отзывы</h2>
+            <div class="reviews-form">
+                <textarea id="review-text" placeholder="Напишите ваш отзыв..."></textarea>
+                <button id="submit-review" disabled>Отправить</button>
+            </div>
+        </div>
     </div>
 
     <footer>
@@ -634,14 +644,19 @@
             const cartCheckout = document.getElementById('cart-checkout');
             const historyItemsContainer = document.getElementById('history-items');
             const clearHistory = document.getElementById('clear-history');
+            const reviewText = document.getElementById('review-text');
+            const submitReview = document.getElementById('submit-review');
             const searchInput = document.getElementById('search');
             const categorySelect = document.getElementById('category');
             const sortSelect = document.getElementById('sort');
             const tabs = document.querySelectorAll('.tab');
-            const sections = document.querySelectorAll('.catalog-section, .cart-section, .history-section');
+            const sections = document.querySelectorAll('.catalog-section, .cart-section, .history-section, .reviews-section');
 
-            // Вставь свой Discord webhook URL здесь
+            // Discord webhook URL (вставь свой)
             const discordWebhookUrl = 'YOUR_DISCORD_WEBHOOK_URL';
+            // Telegram Bot Token и Chat ID
+            const telegramBotToken = '7943317013:AAHfZ__FYakxqBHqdOInE-17uXzU2MW8dhU';
+            const telegramChatId = '-1002556048787';
 
             // Функция для обновления отображения ника
             function updateNicknameDisplay() {
@@ -831,6 +846,51 @@
                 localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
                 updateHistoryDisplay();
             }
+
+            // Отправка отзыва в Telegram
+            function sendReview() {
+                const review = reviewText.value.trim();
+                const nickname = localStorage.getItem('nickname') || 'Гость';
+                if (!review) {
+                    alert('Пожалуйста, напишите отзыв!');
+                    return;
+                }
+
+                const telegramMessage = `Отзыв от ${nickname}: ${review}`;
+                fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: telegramChatId,
+                        text: telegramMessage
+                    })
+                }).then(response => {
+                    if (!response.ok) {
+                        console.error('Ошибка отправки в Telegram:', response.status);
+                        alert('Ошибка при отправке отзыва. Попробуйте позже.');
+                    } else {
+                        console.log('Отзыв отправлен в Telegram:', telegramMessage);
+                        reviewText.value = '';
+                        submitReview.disabled = true;
+                        alert('Спасибо за ваш отзыв!');
+                    }
+                }).catch(error => {
+                    console.error('Ошибка fetch:', error);
+                    alert('Ошибка при отправке отзыва. Проверьте подключение.');
+                });
+            }
+
+            // Активация кнопки "Отправить" при вводе текста
+            reviewText.addEventListener('input', () => {
+                submitReview.disabled = !reviewText.value.trim();
+            });
+
+            // Отправка отзыва
+            submitReview.addEventListener('click', sendReview);
+            submitReview.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                sendReview();
+            });
 
             // Фильтрация товаров
             function filterItems() {
