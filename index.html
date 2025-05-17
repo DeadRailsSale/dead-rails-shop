@@ -3,10 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Каталог Dead Rails с поиском, фильтрами, корзиной, историей покупок, отзывами и помощью аккаунту.">
+    <meta name="description" content="Каталог Dead Rails с поиском, фильтрами, корзиной, историей покупок, отзывами и улучшенной помощью аккаунту.">
     <meta name="keywords" content="Dead Rails, классы, поезда, облигации, квесты, накрутка побед, магазин, отзывы">
     <title>Dead Rails</title>
     <style>
+        .image-container {
+            width: 150px;
+            height: 150px; /* Fixed height for consistency */
+            overflow: hidden;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+        }
+        
+        .item img {
+            width: 100%;
+            max-width: 150px;
+            height: auto;
+            max-height: 150px; /* Cap the height */
+            border-radius: 8px;
+            margin-bottom: 10px;
+            object-fit: contain; /* Image scales to fit without cropping */
+            border: 1px solid #333;
+        }
+        
+        .item {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s, border 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 1px solid #333;
+            min-height: 300px; /* Ensure consistent card height */
+        }
+        
         * {
             box-sizing: border-box;
             margin: 0;
@@ -118,7 +151,7 @@
             margin-left: 5px;
             border: 1px solid #047857;
         }
-        .category, .quests, .bonds, .wins {
+        .category {
             margin-bottom: 40px;
         }
         h2 {
@@ -140,18 +173,6 @@
             height: 3px;
             background: #047857;
         }
-        h3 {
-            font-size: 1.4em;
-            color: #f7f7f7;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        h4 {
-            font-size: 1.2em;
-            color: #047857;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
         .item-list, .quest-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -172,15 +193,6 @@
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(4, 120, 87, 0.3);
             border: 1px solid #047857;
-        }
-        .item img, .quest img {
-            width: 100%;
-            max-width: 150px;
-            height: auto;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            object-fit: cover;
-            border: 1px solid #333;
         }
         .item h3, .quest h3 {
             font-size: 1.2em;
@@ -207,7 +219,7 @@
             margin-bottom: 8px;
             fill: #047857;
         }
-        .item button, .quest button, .bonds button, .wins button {
+        .item button, .quest button {
             width: 100%;
             padding: 10px;
             background: #047857;
@@ -220,7 +232,7 @@
             transition: background 0.2s, transform 0.2s;
             border: 1px solid #047857;
         }
-        .item button:hover, .quest button:hover, .bonds button:hover, .wins button:hover {
+        .item button:hover, .quest button:hover {
             background: #035f44;
             transform: scale(1.05);
             border: 1px solid #035f44;
@@ -530,52 +542,6 @@
         .modal-content .close-button.active {
             display: inline-block;
         }
-        .schedule {
-            font-size: 1em;
-            color: #a3a3a3;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-        }
-        .bonds-controls, .wins-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .bonds-controls button, .wins-controls button {
-            width: 40px;
-            height: 40px;
-            background: #262626;
-            color: #f7f7f7;
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .bonds-controls button:hover, .wins-controls button:hover {
-            background: #047857;
-            transform: scale(1.05);
-            border: 1px solid #047857;
-        }
-        .bonds-controls button:disabled, .wins-controls button:disabled {
-            background: #3a4a44;
-            cursor: not-allowed;
-            border: 1px solid #3a4a44;
-        }
-        .bonds-controls span, .wins-controls span {
-            font-size: 1.1em;
-            color: #f7f7f7;
-            min-width: 40px;
-            text-align: center;
-        }
-        .bonds-total, .wins-total {
-            font-size: 1.1em;
-            color: #047857;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
         footer {
             text-align: center;
             padding: 20px;
@@ -593,6 +559,148 @@
         footer a:hover {
             text-decoration: underline;
         }
+        .account-help-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.5s ease-in;
+            border: 2px solid #047857;
+        }
+        .account-help-section .schedule {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #047857;
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(4, 120, 87, 0.3);
+            background: #262626;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #047857;
+            animation: fadeIn 1s ease-in;
+        }
+        .account-help-section .quests, .account-help-section .bonds-v1, .account-help-section .bonds-v2, .account-help-section .wins {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .account-help-section .quests {
+            border: 2px solid #047857;
+        }
+        .account-help-section .bonds-v1 {
+            border: 2px solid #047857;
+        }
+        .account-help-section .bonds-v2 {
+            border: 2px solid #b91c1c;
+        }
+        .account-help-section .wins {
+            border: 2px solid #d4af37;
+        }
+        .account-help-section .quests:hover, .account-help-section .bonds:hover, .account-help-section .wins:hover {
+            transform: translateY(-3px);
+        }
+        .bonds-controls, .wins-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .bonds-controls button, .wins-controls button {
+            padding: 10px 16px;
+            background: #047857;
+            color: #f7f7f7;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.2s, transform 0.2s;
+            border: 1px solid #047857;
+        }
+        .bonds-v2 .bonds-controls button {
+            background: #b91c1c;
+            border: 1px solid #b91c1c;
+        }
+        .wins .wins-controls button {
+            background: #d4af37;
+            border: 1px solid #d4af37;
+        }
+        .bonds-controls button:hover, .wins-controls button:hover {
+            transform: scale(1.1);
+        }
+        .bonds-v1 .bonds-controls button:hover {
+            background: #035f44;
+            border: 1px solid #035f44;
+        }
+        .bonds-v2 .bonds-controls button:hover {
+            background: #991b1b;
+            border: 1px solid #991b1b;
+        }
+        .wins .wins-controls button:hover {
+            background: #b89b2f;
+            border: 1px solid #b89b2f;
+        }
+        .bonds-controls button:disabled, .wins-controls button:disabled {
+            background: #3a4a44;
+            cursor: not-allowed;
+            transform: none;
+            border: 1px solid #3a4a44;
+        }
+        .bonds-controls span, .wins-controls span {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #f7f7f7;
+            background: #262626;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #047857;
+        }
+        .bonds-v2 .bonds-controls span {
+            border: 1px solid #b91c1c;
+        }
+        .wins .wins-controls span {
+            border: 1px solid #d4af37;
+        }
+        .bonds-total, .wins-total {
+            font-size: 1.1em;
+            color: #047857;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .bonds-v2 .bonds-total {
+            color: #b91c1c;
+        }
+        .wins .wins-total {
+            color: #d4af37;
+        }
+        .bonds button, .wins button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1em;
+            border: 1px solid #047857;
+        }
+        .bonds-v2 button {
+            border: 1px solid #b91c1c;
+        }
+        .wins button {
+            border: 1px solid #d4af37;
+        }
+        .bonds button:hover, .wins button:hover {
+            border: 1px solid #035f44;
+        }
+        .bonds-v2 button:hover {
+            border: 1px solid #991b1b;
+        }
+        .wins button:hover {
+            border: 1px solid #b89b2f;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -609,21 +717,12 @@
             h2 {
                 font-size: 1.5em;
             }
-            h3 {
-                font-size: 1.2em;
-            }
-            h4 {
-                font-size: 1.1em;
-            }
             .item-list, .cart-items, .history-items, .quest-list {
                 grid-template-columns: 1fr;
             }
             .item, .cart-item, .history-item, .quest {
                 padding: 15px;
                 border: 1px solid #333;
-            }
-            .item img, .quest img {
-                max-width: 120px;
             }
             .item h3, .quest h3 {
                 font-size: 1.1em;
@@ -634,7 +733,7 @@
             .quest-description {
                 font-size: 0.8em;
             }
-            .item button, .quest button, .bonds button, .wins button {
+            .item button, .quest button {
                 font-size: 0.85em;
                 padding: 8px;
                 border: 1px solid #047857;
@@ -680,20 +779,62 @@
                 padding: 8px 15px;
                 border: 1px solid #b91c1c;
             }
-            .schedule {
-                font-size: 0.9em;
+            .account-help-section {
+                padding: 20px;
+                border: 1px solid #047857;
+            }
+            .account-help-section .schedule {
+                font-size: 1.2em;
+                padding: 10px;
+                border: 1px solid #047857;
+            }
+            .account-help-section .quests, .account-help-section .bonds-v1, .account-help-section .bonds-v2, .account-help-section .wins {
+                padding: 15px;
+                border: 1px solid;
+            }
+            .account-help-section .quests {
+                border-color: #047857;
+            }
+            .account-help-section .bonds-v1 {
+                border-color: #047857;
+            }
+            .account-help-section .bonds-v2 {
+                border-color: #b91c1c;
+            }
+            .account-help-section .wins {
+                border-color: #d4af37;
+            }
+            .bonds-controls, .wins-controls {
+                flex-direction: column;
+                gap: 10px;
             }
             .bonds-controls button, .wins-controls button {
-                width: 35px;
-                height: 35px;
+                padding: 8px 12px;
                 font-size: 1em;
+                border: 1px solid;
+            }
+            .bonds-v1 .bonds-controls button {
+                border-color: #047857;
+            }
+            .bonds-v2 .bonds-controls button {
+                border-color: #b91c1c;
+            }
+            .wins .wins-controls button {
+                border-color: #d4af37;
             }
             .bonds-controls span, .wins-controls span {
-                font-size: 1em;
-                min-width: 35px;
+                font-size: 1.1em;
+                padding: 6px 10px;
+                border: 1px solid;
             }
-            .bonds-total, .wins-total {
-                font-size: 1em;
+            .bonds-v1 .bonds-controls span {
+                border-color: #047857;
+            }
+            .bonds-v2 .bonds-controls span {
+                border-color: #b91c1c;
+            }
+            .wins .wins-controls span {
+                border-color: #d4af37;
             }
         }
     </style>
@@ -758,106 +899,100 @@
                 <h2>Классы</h2>
                 <div class="item-list">
                     <div class="item" data-name="Доктор" data-price="26" data-category="classes">
-                        <img src="" alt="Доктор" class="item-image">
+                        <img src="photos/medic.jpg" alt="Доктор" class="item-image">
                         <h3>Доктор</h3>
                         <p>26 тг</p>
                         <button class="add-to-cart" data-name="Доктор" data-price="26">Добавить</button>
                     </div>
                     <div class="item" data-name="Майнер" data-price="30" data-category="classes">
-                        <img src="" alt="Майнер" class="item-image">
+                        <img src="photos/mainer.jpg" alt="Майнер" class="item-image">
                         <h3>Майнер</h3>
                         <p>30 тг</p>
                         <button class="add-to-cart" data-name="Майнер" data-price="30">Добавить</button>
                     </div>
                     <div class="item" data-name="Музыкант" data-price="30" data-category="classes">
-                        <img src="" alt="Музыкант" class="item-image">
+                        <img src="photos/musicant.jpg" alt="Музыкант" class="item-image">
                         <h3>Музыкант</h3>
                         <p>30 тг</p>
                         <button class="add-to-cart" data-name="Музыкант" data-price="30">Добавить</button>
                     </div>
                     <div class="item" data-name="Арсонист" data-price="40" data-category="classes">
-                        <img src="" alt="Арсонист" class="item-image">
+                        <img src="photos/arsonist.jpg" alt="Арсонист" class="item-image">
                         <h3>Арсонист</h3>
                         <p>40 тг</p>
                         <button class="add-to-cart" data-name="Арсонист" data-price="40">Добавить</button>
                     </div>
                     <div class="item" data-name="Мастер упаковки" data-price="55" data-category="classes">
-                        <img src="" alt="Мастер упаковки" class="item-image">
+                        <img src="photos/master.jpg" alt="Мастер упаковки" class="item-image">
                         <h3>Мастер упаковки</h3>
                         <p>55 тг</p>
                         <button class="add-to-cart" data-name="Мастер упаковки" data-price="55">Добавить</button>
                     </div>
                     <div class="item" data-name="Некромант" data-price="55" data-category="classes">
-                        <img src="" alt="Некромант" class="item-image">
+                        <img src="photos/nekromant.jpg" alt="Некромант" class="item-image">
                         <h3>Некромант</h3>
                         <p>55 тг</p>
                         <button class="add-to-cart" data-name="Некромант" data-price="55">Добавить</button>
                     </div>
                     <div class="item" data-name="Аламо" data-price="80" data-category="classes">
-                        <img src="" alt="Аламо" class="item-image">
+                        <img src="photos/alamo.jpg" alt="Аламо" class="item-image">
                         <h3>Аламо</h3>
                         <p>80 тг</p>
                         <button class="add-to-cart" data-name="Аламо" data-price="80">Добавить</button>
                     </div>
                     <div class="item" data-name="Ковбой" data-price="75" data-category="classes">
-                        <img src="" alt="Ковбой" class="item-image">
+                        <img src="photos/covmboy.jpg" alt="Ковбой" class="item-image">
                         <h3>Ковбой</h3>
                         <p>75 тг</p>
                         <button class="add-to-cart" data-name="Ковбой" data-price="75">Добавить</button>
                     </div>
                     <div class="item" data-name="Кондуктор" data-price="75" data-category="classes">
-                        <img src="" alt="Кондуктор" class="item-image">
+                        <img src="photos/conductor.jpg" alt="Кондуктор" class="item-image">
                         <h3>Кондуктор</h3>
                         <p>75 тг</p>
                         <button class="add-to-cart" data-name="Кондуктор" data-price="75">Добавить</button>
                     </div>
                     <div class="item" data-name="Высокий роллер" data-price="80" data-category="classes">
-                        <img src="" alt="Высокий роллер" class="item-image">
+                        <img src="photos/high%20roller.jpg" alt="Высокий роллер" class="item-image">
                         <h3>Высокий роллер</h3>
                         <p>80 тг</p>
                         <button class="add-to-cart" data-name="Высокий роллер" data-price="80">Добавить</button>
                     </div>
                     <div class="item" data-name="Вереволк" data-price="80" data-category="classes">
-                        <img src="" alt="Вереволк" class="item-image">
+                        <img src="photos/werewolf.jpg" alt="Вереволк" class="item-image">
                         <h3>Вереволк</h3>
                         <p>80 тг</p>
                         <button class="add-to-cart" data-name="Вереволк" data-price="80">Добавить</button>
                     </div>
                     <div class="item" data-name="Выживший" data-price="100" data-category="classes">
-                        <img src="" alt="Выживший" class="item-image">
+                        <img src="photos/survivor.jpg" alt="Выживший" class="item-image">
                         <h3>Выживший</h3>
                         <p>100 тг</p>
                         <button class="add-to-cart" data-name="Выживший" data-price="100">Добавить</button>
                     </div>
                     <div class="item" data-name="Священник" data-price="100" data-category="classes">
-                        <img src="" alt="Священник" class="item-image">
+                        <img src="photos/svishennik.jpg" alt="Священник" class="item-image">
                         <h3>Священник</h3>
                         <p>100 тг</p>
                         <button class="add-to-cart" data-name="Священник" data-price="100">Добавить</button>
                     </div>
                     <div class="item" data-name="Вампир" data-price="103" data-category="classes">
-                        <img src="" alt="Вампир" class="item-image">
+                        <img src="photos/vampire.jpg" alt="Вампир" class="item-image">
                         <h3>Вампир</h3>
                         <p>103 тг</p>
                         <button class="add-to-cart" data-name="Вампир" data-price="103">Добавить</button>
                     </div>
                     <div class="item" data-name="Зомби" data-price="105" data-category="classes">
-                        <img src="" alt="Зомби" class="item-image">
+                        <img src="photos/zombie.jpg" alt="Зомби" class="item-image">
                         <h3>Зомби</h3>
                         <p>105 тг</p>
                         <button class="add-to-cart" data-name="Зомби" data-price="105">Добавить</button>
                     </div>
                     <div class="item" data-name="Железный человек" data-price="155" data-category="classes">
-                        <img src="" alt="Железный человек" class="item-image">
+                        <img src="photos/iron%20man.jpg" alt="Железный человек" class="item-image">
                         <h3>Железный человек</h3>
                         <p>155 тг</p>
                         <button class="add-to-cart" data-name="Железный человек" data-price="155">Добавить</button>
-                    </div>
-                    <div class="item" data-name="Милкмен" data-price="90" data-category="classes">
-                        <img src="" alt="Милкмен" class="item-image">
-                        <h3>Милкмен</h3>
-                        <p>90 тг</p>
-                        <button class="add-to-cart" data-name="Милкмен" data-price="90">Добавить</button>
                     </div>
                 </div>
             </div>
@@ -866,19 +1001,19 @@
                 <h2>Поезда</h2>
                 <div class="item-list">
                     <div class="item" data-name="Крупный рогатый скот" data-price="225" data-category="trains">
-                        <img src="" alt="Крупный рогатый скот" class="item-image">
+                        <img src="photos/derevyany%20poezd.jpg" alt="Крупный рогатый скот" class="item-image">
                         <h3>Крупный рогатый скот</h3>
                         <p>225 тг</p>
                         <button class="add-to-cart" data-name="Крупный рогатый скот" data-price="225">Добавить</button>
                     </div>
                     <div class="item" data-name="Золотая лихорадка" data-price="300" data-category="trains">
-                        <img src="" alt="Золотая лихорадка" class="item-image">
+                        <img src="photos/zolotaya%20lih.jpg" alt="золотая лихорадка" class="item-image">
                         <h3>Золотая лихорадка</h3>
                         <p>300 тг</p>
                         <button class="add-to-cart" data-name="Золотая лихорадка" data-price="300">Добавить</button>
                     </div>
                     <div class="item" data-name="Бронированный" data-price="320" data-category="trains">
-                        <img src="" alt="Бронированный" class="item-image">
+                        <img src="photos/bronnerovniy%20poesd.jpg" alt="Бронированный" class="item-image">
                         <h3>Бронированный</h3>
                         <p>320 тг</p>
                         <button class="add-to-cart" data-name="Бронированный" data-price="320">Добавить</button>
@@ -902,7 +1037,7 @@
 
         <div class="reviews-section">
             <h2>Отзывы</h2>
-            <p class="reviews-channel">Наш канал с отзывами: <a href="https://t.me/AibaTimaBeka" target="_blank">МёртвыеРельсыОтзывы</a></p>
+            <p class="reviews-channel">Наш канал с отзывами: <a href="https://t.me/DeadRailsReviews" target="_blank">МёртвыеРельсыОтзывы</a></p>
             <div class="reviews-form">
                 <textarea id="review-text" placeholder="Напишите ваш отзыв..."></textarea>
                 <p class="char-count">Осталось: <span id="char-count">500</span> символов</p>
@@ -922,7 +1057,6 @@
                 <h3>Завершение квестов</h3>
                 <div class="quest-list">
                     <div class="quest" data-name="Стрелок" data-price="150">
-                        <img src="" alt="Стрелок" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14l-1.5 6h3L12 6zm0 8a2 2 0 100 4 2 2 0 000-4z"/></svg>
                         <h3>Стрелок</h3>
                         <p class="quest-description">Имейте 20 оружия в своём инвентаре</p>
@@ -930,7 +1064,6 @@
                         <button class="add-to-cart" data-name="Квест: Стрелок" data-price="150">Добавить</button>
                     </div>
                     <div class="quest" data-name="Магнат" data-price="150">
-                        <img src="" alt="Магнат" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14v12m-4-8h8"/></svg>
                         <h3>Магнат</h3>
                         <p class="quest-description">Получите более 1000 игровых долларов в одной игре</p>
@@ -938,7 +1071,6 @@
                         <button class="add-to-cart" data-name="Квест: Магнат" data-price="150">Добавить</button>
                     </div>
                     <div class="quest" data-name="Неубиваемый" data-price="250">
-                        <img src="" alt="Неубиваемый" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-12l-4 4h8l-4-4z"/></svg>
                         <h3>Неубиваемый</h3>
                         <p class="quest-description">Завершите игру, не убив ни одного игрока</p>
@@ -946,7 +1078,6 @@
                         <button class="add-to-cart" data-name="Квест: Неубиваемый" data-price="250">Добавить</button>
                     </div>
                     <div class="quest" data-name="Пони экспресс" data-price="250">
-                        <img src="" alt="Пони экспресс" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm2-10h-4v4h4v-4z"/></svg>
                         <h3>Пони экспресс</h3>
                         <p class="quest-description">Завершите игру без игрока, использующего поезд</p>
@@ -954,7 +1085,6 @@
                         <button class="add-to-cart" data-name="Квест: Пони экспресс" data-price="250">Добавить</button>
                     </div>
                     <div class="quest" data-name="Пацифист" data-price="250">
-                        <img src="" alt="Пацифист" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-12v8m-4-4h8"/></svg>
                         <h3>Пацифист</h3>
                         <p class="quest-description">Завершите игру, не убив врага</p>
@@ -962,7 +1092,6 @@
                         <button class="add-to-cart" data-name="Квест: Пацифист" data-price="250">Добавить</button>
                     </div>
                     <div class="quest" data-name="Куча долларов" data-price="250">
-                        <img src="" alt="Куча долларов" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-6h4v2h-4v-2zm0-4h4v2h-4v-2z"/></svg>
                         <h3>Куча долларов</h3>
                         <p class="quest-description">Завершите игру, ничего не продавая</p>
@@ -970,7 +1099,6 @@
                         <button class="add-to-cart" data-name="Квест: Куча долларов" data-price="250">Добавить</button>
                     </div>
                     <div class="quest" data-name="Электричество осталось" data-price="300">
-                        <img src="" alt="Электричество осталось" class="quest-image">
                         <svg class="quest-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-10l-3 4h6l-3-4z"/></svg>
                         <h3>Электричество осталось</h3>
                         <p class="quest-description">Продать труп последнего босса Теслы</p>
@@ -981,15 +1109,26 @@
             </div>
             <div class="bonds">
                 <h3>Покупка облигаций</h3>
+                <div class="bonds-v1">
+                    <h4>Облигации v1 <big>(на данный момент не работает)</big></h4>
+                    <p>Цена: 2 тг за 1 облигацию</p>
+                    <div class="bonds-controls">
+                        <button id="bonds-v1-decrement">−</button>
+                        <span id="bonds-v1-count">1</span>
+                        <button id="bonds-v1-increment">+</button>
+                    </div>
+                    <p class="bonds-total">Итого: <span id="bonds-v1-total">2 тг</span></p>
+                    <button id="add-bonds-v1-to-cart">Добавить в корзину</button>
+                </div>
                 <div class="bonds-v2" style="margin-top: 25px;">
                     <h4>Облигации v2: Опасные, но эффективные</h4>
-                    <p>Цена: 150 тг за 1 минуту</p>
+                    <p>Цена: 65 тг за 1 минуту</p>
                     <div class="bonds-controls">
                         <button id="bonds-v2-decrement">−</button>
                         <span id="bonds-v2-count">1</span>
                         <button id="bonds-v2-increment">+</button>
                     </div>
-                    <p class="bonds-total">Итого: <span id="bonds-v2-total">150 тг</span></p>
+                    <p class="bonds-total">Итого: <span id="bonds-v2-total">65 тг</span></p>
                     <button id="add-bonds-v2-to-cart">Добавить в корзину</button>
                 </div>
             </div>
@@ -1041,15 +1180,20 @@
             const searchInput = document.getElementById('search');
             const categorySelect = document.getElementById('category');
             const sortSelect = document.getElementById('sort');
-            const bondsV2Decrement = document.getElementById('bonds-v2-decrement');
-            const bondsV2Increment = document.getElementById('bonds-v2-increment');
+            const bondsV1Count = document.getElementById('bonds-v1-count');
+            const bondsV1Total = document.getElementById('bonds-v1-total');
+            const bondsV1Increment = document.getElementById('bonds-v1-increment');
+            const bondsV1Decrement = document.getElementById('bonds-v1-decrement');
+            const addBondsV1ToCart = document.getElementById('add-bonds-v1-to-cart');
             const bondsV2Count = document.getElementById('bonds-v2-count');
             const bondsV2Total = document.getElementById('bonds-v2-total');
+            const bondsV2Increment = document.getElementById('bonds-v2-increment');
+            const bondsV2Decrement = document.getElementById('bonds-v2-decrement');
             const addBondsV2ToCart = document.getElementById('add-bonds-v2-to-cart');
-            const winsDecrement = document.getElementById('wins-decrement');
-            const winsIncrement = document.getElementById('wins-increment');
             const winsCount = document.getElementById('wins-count');
             const winsTotal = document.getElementById('wins-total');
+            const winsIncrement = document.getElementById('wins-increment');
+            const winsDecrement = document.getElementById('wins-decrement');
             const addWinsToCart = document.getElementById('add-wins-to-cart');
             const tabs = document.querySelectorAll('.tab');
             const sections = document.querySelectorAll('.catalog-section, .cart-section, .history-section, .reviews-section, .account-help-section');
@@ -1067,6 +1211,96 @@
                     tab.classList.add('active');
                     document.querySelector(`.${tab.dataset.tab}-section`).classList.add('active');
                 });
+            });
+
+            // Управление облигациями v1
+            let bondsV1Quantity = 1;
+            const bondV1Price = 2;
+
+            function updateBondsV1Display() {
+                bondsV1Count.textContent = bondsV1Quantity;
+                bondsV1Total.textContent = `${bondsV1Quantity * bondV1Price} тг`;
+                bondsV1Decrement.disabled = bondsV1Quantity <= 1;
+            }
+
+            bondsV1Increment.addEventListener('click', () => {
+                bondsV1Quantity++;
+                updateBondsV1Display();
+            });
+
+            bondsV1Decrement.addEventListener('click', () => {
+                if (bondsV1Quantity > 1) {
+                    bondsV1Quantity--;
+                    updateBondsV1Display();
+                }
+            });
+
+            addBondsV1ToCart.addEventListener('click', () => {
+                const name = `Облигации v1 (${bondsV1Quantity} шт.)`;
+                const price = bondsV1Quantity * bondV1Price;
+                addToCart(name, price);
+                bondsV1Quantity = 1;
+                updateBondsV1Display();
+            });
+
+            // Управление облигациями v2
+            let bondsV2Quantity = 1;
+            const bondV2Price = 65;
+
+            function updateBondsV2Display() {
+                bondsV2Count.textContent = bondsV2Quantity;
+                bondsV2Total.textContent = `${bondsV2Quantity * bondV2Price} тг`;
+                bondsV2Decrement.disabled = bondsV2Quantity <= 1;
+            }
+
+            bondsV2Increment.addEventListener('click', () => {
+                bondsV2Quantity++;
+                updateBondsV2Display();
+            });
+
+            bondsV2Decrement.addEventListener('click', () => {
+                if (bondsV2Quantity > 1) {
+                    bondsV2Quantity--;
+                    updateBondsV2Display();
+                }
+            });
+
+            addBondsV2ToCart.addEventListener('click', () => {
+                const name = `Облигации v2 (${bondsV2Quantity} мин.)`;
+                const price = bondsV2Quantity * bondV2Price;
+                addToCart(name, price);
+                bondsV2Quantity = 1;
+                updateBondsV2Display();
+            });
+
+            // Управление накруткой побед
+            let winsQuantity = 1;
+            const winPrice = 100;
+
+            function updateWinsDisplay() {
+                winsCount.textContent = winsQuantity;
+                winsTotal.textContent = `${winsQuantity * winPrice} тг`;
+                winsDecrement.disabled = winsQuantity <= 1;
+            }
+
+            winsIncrement.addEventListener('click', () => {
+                winsQuantity++;
+                updateWinsDisplay();
+            });
+
+            winsDecrement.addEventListener('click', () => {
+                if (winsQuantity > 1) {
+                    winsQuantity--;
+                    updateWinsDisplay();
+                }
+            });
+
+            addWinsToCart.addEventListener('click', () => {
+                const name = `Накрутка побед (${winsQuantity} шт.)`;
+                const price = winsQuantity * winPrice;
+                addToCart(name, price);
+                winsQuantity = 1;
+                updateWinsDisplay();
             });
 
             // Обновление отображения ника
@@ -1449,8 +1683,7 @@
                 classesContainer.innerHTML = '';
                 trainsContainer.innerHTML = '';
 
-                filteredItems.forEach(item => {
-                    const itemCategory = item.dataset.category;
+                filteredItems.forEach(item => {                    const itemCategory = item.dataset.category;
                     if (itemCategory === 'classes') {
                         classesContainer.appendChild(item);
                     } else if (itemCategory === 'trains') {
@@ -1463,78 +1696,18 @@
                 document.getElementById('trains').style.display = trainsContainer.children.length > 0 ? 'block' : 'none';
             }
 
-            // Управление облигациями v2
-            let bondsV2Quantity = 1;
-            const bondV2Price = 150;
-
-            function updateBondsV2Display() {
-                bondsV2Count.textContent = bondsV2Quantity;
-                bondsV2Total.textContent = `${bondsV2Quantity * bondV2Price} тг`;
-                bondsV2Decrement.disabled = bondsV2Quantity <= 1;
-            }
-
-            bondsV2Increment.addEventListener('click', () => {
-                bondsV2Quantity++;
-                updateBondsV2Display();
-            });
-
-            bondsV2Decrement.addEventListener('click', () => {
-                if (bondsV2Quantity > 1) {
-                    bondsV2Quantity--;
-                    updateBondsV2Display();
-                }
-            });
-
-            addBondsV2ToCart.addEventListener('click', () => {
-                const name = `Облигации v2 (${bondsV2Quantity} мин.)`;
-                const price = bondsV2Quantity * bondV2Price;
-                addToCart(name, price);
-                bondsV2Quantity = 1;
-                updateBondsV2Display();
-            });
-
-            // Управление накруткой побед
-            let winsQuantity = 1;
-            const winPrice = 100;
-
-            function updateWinsDisplay() {
-                winsCount.textContent = winsQuantity;
-                winsTotal.textContent = `${winsQuantity * winPrice} тг`;
-                winsDecrement.disabled = winsQuantity <= 1;
-            }
-
-            winsIncrement.addEventListener('click', () => {
-                winsQuantity++;
-                updateWinsDisplay();
-            });
-
-            winsDecrement.addEventListener('click', () => {
-                if (winsQuantity > 1) {
-                    winsQuantity--;
-                    updateWinsDisplay();
-                }
-            });
-
-            addWinsToCart.addEventListener('click', () => {
-                const name = `Накрутка побед (${winsQuantity} шт.)`;
-                const price = winsQuantity * winPrice;
-                addToCart(name, price);
-                winsQuantity = 1;
-                updateWinsDisplay();
-            });
-
             // Обработчики событий для фильтров и сортировки
             searchInput.addEventListener('input', filterAndSortItems);
             categorySelect.addEventListener('change', filterAndSortItems);
             sortSelect.addEventListener('change', filterAndSortItems);
 
             // Обработчик добавления в корзину
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('add-to-cart')) {
-                    const name = e.target.dataset.name;
-                    const price = e.target.dataset.price;
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', () => {
+                    const name = button.dataset.name;
+                    const price = button.dataset.price;
                     addToCart(name, price);
-                }
+                });
             });
 
             // Обработчик удаления из корзины
@@ -1583,10 +1756,11 @@
             updateCartCount();
             updateCartDisplay();
             updateHistoryDisplay();
-            checkUserReview();
-            filterAndSortItems();
+            updateBondsV1Display();
             updateBondsV2Display();
             updateWinsDisplay();
+            checkUserReview();
+            filterAndSortItems();
 
             // Обработка изменения размера окна для адаптивности
             window.addEventListener('resize', () => {
@@ -1601,7 +1775,7 @@
             });
 
             // Добавление анимации при загрузке
-            document.querySelectorAll('.category, .quests, .bonds, .wins').forEach(category => {
+            document.querySelectorAll('.category').forEach(category => {
                 category.style.opacity = '0';
                 setTimeout(() => {
                     category.style.transition = 'opacity 0.5s ease-in';
@@ -1661,452 +1835,74 @@
                 alert('Не удалось загрузить изображение. Попробуйте другое.');
             });
 
-                        // Логирование активности пользователя для отладки
+            // Логирование активности пользователя для отладки
             function logUserAction(action) {
-                console.log(`Пользователь ${localStorage.getItem('nickname') || 'Гость'} выполнил действие: ${action}`);
+                console.log(`Пользователь ${localStorage.getItem('nickname') || 'Гость'}: ${action}`);
             }
 
-            // Логирование основных действий пользователя
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('add-to-cart')) {
-                    logUserAction(`Добавление в корзину: ${e.target.dataset.name}`);
-                } else if (e.target.classList.contains('remove-from-cart')) {
-                    logUserAction(`Удаление из корзины: индекс ${e.target.dataset.index}`);
-                } else if (e.target === cartCheckout) {
-                    logUserAction('Оформление заказа');
-                } else if (e.target === clearHistory) {
-                    logUserAction('Очистка истории покупок');
-                } else if (e.target === submitReview) {
-                    logUserAction('Отправка отзыва');
-                } else if (e.target === deleteReview) {
-                    logUserAction('Удаление отзыва');
-                } else if (e.target.classList.contains('tab')) {
-                    logUserAction(`Переключение вкладки: ${e.target.dataset.tab}`);
-                }
-            });
+            // Логирование ключевых действий
+            submitNickname.addEventListener('click', () => logUserAction('Подтвердил ник'));
+            cartCheckout.addEventListener('click', () => logUserAction('Оформил заказ'));
+            submitReview.addEventListener('click', () => logUserAction('Отправил отзыв'));
+            deleteReview.addEventListener('click', () => logUserAction('Удалил отзыв'));
 
-            // Обработка двойных кликов для предотвращения множественных действий
-            let isProcessing = false;
-            function preventDoubleClick(action) {
-                if (isProcessing) return;
-                isProcessing = true;
-                action();
-                setTimeout(() => {
-                    isProcessing = false;
-                }, 500);
-            }
-
-            // Переопределение обработчиков для предотвращения двойных кликов
-            addBondsV2ToCart.addEventListener('click', () => {
-                preventDoubleClick(() => {
-                    const name = `Облигации v2 (${bondsV2Quantity} мин.)`;
-                    const price = bondsV2Quantity * bondV2Price;
-                    addToCart(name, price);
-                    bondsV2Quantity = 1;
-                    updateBondsV2Display();
+            // Поддержка сенсорных устройств
+            document.querySelectorAll('.tab, button, .cart-tab').forEach(element => {
+                element.addEventListener('touchstart', (e) => {
+                    e.target.classList.add('active');
+                });
+                element.addEventListener('touchend', (e) => {
+                    e.target.classList.remove('active');
                 });
             });
 
-            addWinsToCart.addEventListener('click', () => {
-                preventDoubleClick(() => {
-                    const name = `Накрутка побед (${winsQuantity} шт.)`;
-                    const price = winsQuantity * winPrice;
-                    addToCart(name, price);
-                    winsQuantity = 1;
-                    updateWinsDisplay();
-                });
-            });
-
-            cartCheckout.addEventListener('click', (e) => {
-                e.preventDefault();
-                preventDoubleClick(() => {
-                    if (cart.length > 0) {
-                        checkout();
-                        warningModal.style.display = 'flex';
+            // Предотвращение множественных кликов
+            function preventMultipleClicks(button, callback, delay = 1000) {
+                let isClicked = false;
+                button.addEventListener('click', async (e) => {
+                    if (!isClicked) {
+                        isClicked = true;
+                        await callback(e);
                         setTimeout(() => {
-                            closeWarning.classList.add('active');
-                        }, 5000);
+                            isClicked = false;
+                        }, delay);
                     }
                 });
-            });
-
-            // Обработка событий касания для мобильных устройств
-            document.addEventListener('touchstart', (e) => {
-                if (e.target.classList.contains('add-to-cart')) {
-                    e.preventDefault();
-                    const name = e.target.dataset.name;
-                    const price = e.target.dataset.price;
-                    preventDoubleClick(() => addToCart(name, price));
-                } else if (e.target.classList.contains('remove-from-cart')) {
-                    e.preventDefault();
-                    const index = e.target.dataset.index;
-                    preventDoubleClick(() => removeFromCart(index));
-                }
-            });
-
-            // Автоматическое сохранение состояния фильтров
-            function saveFilterState() {
-                localStorage.setItem('search', searchInput.value);
-                localStorage.setItem('category', categorySelect.value);
-                localStorage.setItem('sort', sortSelect.value);
-            }
-
-            // Восстановление состояния фильтров
-            function restoreFilterState() {
-                searchInput.value = localStorage.getItem('search') || '';
-                categorySelect.value = localStorage.getItem('category') || 'all';
-                sortSelect.value = localStorage.getItem('sort') || 'default';
-                filterAndSortItems();
-            }
-
-            searchInput.addEventListener('input', saveFilterState);
-            categorySelect.addEventListener('change', saveFilterState);
-            sortSelect.addEventListener('change', saveFilterState);
-
-            // Инициализация восстановления фильтров
-            restoreFilterState();
-
-            // Проверка валидности цен при загрузке
-            function validatePrices() {
-                document.querySelectorAll('.item, .quest').forEach(item => {
-                    const price = Number(item.dataset.price);
-                    if (isNaN(price) || price <= 0) {
-                        console.warn(`Некорректная цена для ${item.dataset.name}: ${item.dataset.price}`);
-                        item.querySelector('button').disabled = true;
-                    }
-                });
-            }
-
-            validatePrices();
-
-            // Обработка фокуса на полях ввода
-            document.querySelectorAll('input, textarea').forEach(input => {
-                input.addEventListener('focus', () => {
-                    input.style.borderColor = '#047857';
-                });
-                input.addEventListener('blur', () => {
-                    input.style.borderColor = '#333';
-                });
-            });
-
-            // Поддержка клавиатурной навигации
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Tab') {
-                    const activeTab = document.querySelector('.tab.active');
-                    if (activeTab) {
-                        const tabsArray = Array.from(tabs);
-                        const currentIndex = tabsArray.indexOf(activeTab);
-                        let nextIndex = currentIndex;
-                        if (e.shiftKey) {
-                            nextIndex = currentIndex - 1 < 0 ? tabsArray.length - 1 : currentIndex - 1;
-                        } else {
-                            nextIndex = currentIndex + 1 >= tabsArray.length ? 0 : currentIndex + 1;
-                        }
-                        tabsArray[nextIndex].click();
+                button.addEventListener('touchstart', async (e) => {
+                    if (!isClicked) {
+                        isClicked = true;
                         e.preventDefault();
-                    }
-                }
-            });
-
-            // Обработка загрузки изображений для элементов каталога
-            function loadItemImages() {
-                document.querySelectorAll('.item-image, .quest-image').forEach(img => {
-                    if (!img.src || img.src.endsWith('/')) {
-                        img.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-                        img.alt = 'Изображение недоступно';
+                        await callback(e);
+                        setTimeout(() => {
+                            isClicked = false;
+                        }, delay);
                     }
                 });
             }
 
-            loadItemImages();
+            preventMultipleClicks(submitReview, sendReview);
+            preventMultipleClicks(deleteReview, deleteUserReview);
+            preventMultipleClicks(cartCheckout, checkout);
+            preventMultipleClicks(clearHistory, clearPurchaseHistory);
 
-            // Проверка целостности данных в localStorage
-            function validateLocalStorage() {
-                try {
-                    const testCart = JSON.parse(localStorage.getItem('cart'));
-                    const testHistory = JSON.parse(localStorage.getItem('purchaseHistory'));
-                    if (!Array.isArray(testCart)) {
-                        localStorage.setItem('cart', JSON.stringify([]));
-                        cart = [];
-                    }
-                    if (!Array.isArray(testHistory)) {
-                        localStorage.setItem('purchaseHistory', JSON.stringify([]));
-                        purchaseHistory = [];
-                    }
-                } catch (error) {
-                    console.error('Ошибка валидации localStorage:', error);
-                    localStorage.setItem('cart', JSON.stringify([]));
-                    localStorage.setItem('purchaseHistory', JSON.stringify([]));
-                    cart = [];
-                    purchaseHistory = [];
-                }
-                updateCartDisplay();
-                updateHistoryDisplay();
-            }
-
-            validateLocalStorage();
-
-            // Автоматическое обновление корзины при изменении localStorage
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'cart') {
-                    cart = JSON.parse(localStorage.getItem('cart')) || [];
-                    updateCartCount();
-                    updateCartDisplay();
-                } else if (e.key === 'purchaseHistory') {
-                    purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
-                    updateHistoryDisplay();
-                } else if (e.key === 'nickname') {
-                    updateNicknameDisplay();
-                    checkUserReview();
-                }
-            });
-
-            // Оптимизация производительности при прокрутке
-            let isScrolling = false;
-            window.addEventListener('scroll', () => {
-                if (!isScrolling) {
-                    window.requestAnimationFrame(() => {
-                        // Оптимизация анимации при прокрутке
-                        document.querySelectorAll('.item, .quest').forEach(item => {
-                            const rect = item.getBoundingClientRect();
-                            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                                item.style.opacity = '1';
-                                item.style.transform = 'translateY(0)';
-                            }
-                        });
-                        isScrolling = false;
-                    });
-                    isScrolling = true;
-                }
-            });
-
-            // Обработка ошибок сети
-            window.addEventListener('offline', () => {
-                alert('Вы оффлайн. Некоторые функции могут быть недоступны.');
-            });
-
-            window.addEventListener('online', () => {
-                checkTelegramApi();
-            });
-
-            // Добавление плавной прокрутки для якорей
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = anchor.getAttribute('href').substring(1);
-                    const targetElement = document.getElementById(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-            });
-
-            // Поддержка accessibility (доступности)
-            document.querySelectorAll('button, input, select, textarea').forEach(element => {
-                if (!element.getAttribute('aria-label')) {
-                    element.setAttribute('aria-label', element.textContent || element.placeholder || 'Интерактивный элемент');
-                }
-            });
-
-            // Обработка изменения языка
-            function updateLanguage() {
-                const lang = navigator.language || navigator.userLanguage;
-                if (lang !== 'ru-RU') {
-                    console.log(`Обнаружен язык: ${lang}. Текущая версия поддерживает только русский.`);
-                }
-            }
-
-            updateLanguage();
-
-            // Проверка устаревших данных в localStorage
-            function clearOldData() {
-                const lastClear = localStorage.getItem('lastClear') || 0;
-                const now = Date.now();
-                const weekInMs = 7 * 24 * 60 * 60 * 1000;
-                if (now - lastClear > weekInMs) {
-                    localStorage.setItem('purchaseHistory', JSON.stringify([]));
-                    localStorage.setItem('lastClear', now);
-                    purchaseHistory = [];
-                    updateHistoryDisplay();
-                }
-            }
-
-            clearOldData();
-
-            // Добавление подсказок для пользователей
-            function addTooltips() {
-                document.querySelectorAll('.add-to-cart').forEach(button => {
-                    button.title = 'Добавить товар в корзину';
-                });
-                document.querySelectorAll('.remove-from-cart').forEach(button => {
-                    button.title = 'Удалить товар из корзины';
-                });
-                cartCheckout.title = 'Перейти к оформлению заказа';
-                clearHistory.title = 'Очистить историю покупок';
-                submitReview.title = 'Отправить отзыв';
-                deleteReview.title = 'Удалить ваш последний отзыв';
-            }
-
-            addTooltips();
-
-            // Обработка долгого нажатия для мобильных устройств
-            let touchTimeout;
-            document.addEventListener('touchstart', (e) => {
-                touchTimeout = setTimeout(() => {
-                    if (e.target.classList.contains('item') || e.target.classList.contains('quest')) {
-                        alert(`Подробности: ${e.target.dataset.name} - ${e.target.dataset.price} тг`);
-                    }
-                }, 1000);
-            });
-
-            document.addEventListener('touchend', () => {
-                clearTimeout(touchTimeout);
-            });
-
-            document.addEventListener('touchcancel', () => {
-                clearTimeout(touchTimeout);
-            });
-
-            // Проверка поддержки WebP
-            function checkWebPSupport() {
-                const img = new Image();
-                img.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
-                img.onload = () => {
-                    document.body.classList.add('webp-supported');
-                };
-                img.onerror = () => {
-                    document.body.classList.add('no-webp');
-                };
-            }
-
-            checkWebPSupport();
-
-            // Оптимизация изображений для Retina-дисплеев
-            function optimizeImages() {
-                if (window.devicePixelRatio > 1) {
-                    document.querySelectorAll('.item-image, .quest-image').forEach(img => {
-                        if (img.src.includes('placeholder')) {
-                            img.src = 'https://via.placeholder.com/300?text=Image+Not+Found';
-                        }
-                    });
-                }
-            }
-
-            optimizeImages();
-
-            // Обработка изменения ориентации экрана
-            window.addEventListener('orientationchange', () => {
-                filterAndSortItems();
-                setTimeout(() => {
-                    window.scrollTo(0, 0);
-                }, 100);
-            });
-
-            // Поддержка горячих клавиш
+            // Поддержка клавиатуры для доступности
             document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key === 'f') {
-                    e.preventDefault();
-                    searchInput.focus();
-                } else if (e.key === 'Escape') {
-                    if (nicknameModal.style.display === 'flex') {
-                        nicknameModal.style.display = 'none';
-                    } else if (warningModal.style.display === 'flex') {
-                        warningModal.style.display = 'none';
+                if (e.key === 'Escape' && warningModal.style.display === 'flex' && closeWarning.classList.contains('active')) {
+                    warningModal.style.display = 'none';
+                }
+                if (e.key === 'Enter' && document.activeElement === reviewText) {
+                    if (!submitReview.disabled) {
+                        sendReview();
                     }
                 }
             });
 
-            // Проверка производительности
-            let lastFrameTime = performance.now();
-            function checkPerformance() {
-                const now = performance.now();
-                const fps = 1000 / (now - lastFrameTime);
-                lastFrameTime = now;
-                if (fps < 30) {
-                    console.warn('Низкая производительность: ', fps.toFixed(2), 'FPS');
-                }
-                requestAnimationFrame(checkPerformance);
-            }
-
-            checkPerformance();
-
-            // Автоматическое обновление цен (если нужно)
-            function updateDynamicPrices() {
-                // Placeholder для будущей логики динамического обновления цен
-                console.log('Проверка обновления цен...');
-            }
-
-            setInterval(updateDynamicPrices, 60000);
-
-            // Обработка drag-and-drop для загрузки изображений в отзывах
-            const fileInputContainer = document.querySelector('.file-input-container');
-            fileInputContainer.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileInputContainer.style.background = '#262626';
-            });
-
-            fileInputContainer.addEventListener('dragleave', () => {
-                fileInputContainer.style.background = 'none';
-            });
-
-            fileInputContainer.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileInputContainer.style.background = 'none';
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    reviewImage.files = e.dataTransfer.files;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        imagePreview.src = ev.target.result;
-                        imagePreview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                    updateSubmitButton();
-                } else {
-                    alert('Пожалуйста, загрузите изображение!');
-                }
-            });
-
-            // Поддержка копирования текста отзыва
-            reviewText.addEventListener('contextmenu', (e) => {
-                if (reviewText.value.trim()) {
-                    navigator.clipboard.writeText(reviewText.value).then(() => {
-                        alert('Текст отзыва скопирован в буфер обмена.');
-                    });
-                }
-            });
-
-            // Проверка устаревших отзывов
-            function clearOldReviews() {
-                const nickname = localStorage.getItem('nickname') || 'Гость';
-                const lastReview = JSON.parse(localStorage.getItem(`lastReview_${nickname}`));
-                if (lastReview) {
-                    const { timestamp } = lastReview;
-                    const now = Date.now();
-                    const hoursPassed = (now - timestamp) / (1000 * 60 * 60);
-                    if (hoursPassed > 48) {
-                        localStorage.removeItem(`lastReview_${nickname}`);
-                        deleteReview.disabled = true;
-                    }
-                }
-            }
-
-            setInterval(clearOldReviews, 3600000); // Проверка каждые час
-
-            // Инициализация всех обработчиков
-            function initializeEventListeners() {
-                document.querySelectorAll('.item, .quest').forEach(item => {
-                    item.addEventListener('mouseenter', () => {
-                        item.style.transition = 'transform 0.3s, box-shadow 0.3s';
-                    });
-                    item.addEventListener('mouseleave', () => {
-                        item.style.transition = 'transform 0.3s, box-shadow 0.3s';
-                    });
-                });
-            }
-
-            initializeEventListeners();
+            // Периодическая проверка отзывов
+            setInterval(checkUserReview, 60000); // Проверка каждую минуту
 
             // Финальная инициализация
-            console.log('Приложение инициализировано успешно.');
+            console.log('Приложение успешно инициализировано');
         });
+    </script>
+</body>
+</html>
