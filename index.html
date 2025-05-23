@@ -1450,7 +1450,7 @@
             }
 
             // Оформление заказа
-            function checkout() {
+            async function checkout() {
                 if (cart.length === 0) return;
                 const nickname = localStorage.getItem('nickname') || 'Гость';
                 const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -1459,25 +1459,32 @@
                 purchaseHistory.push(purchase);
                 localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
 
-                const itemsList = cart.map(item => `${item.name} (${item.price} тг)`).join(', ');
-                const discordMessage = {
-                    content: `${nickname} купил: ${itemsList} (Итого: ${total} тг)`
-                };
-                fetch(discordWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(discordMessage)
-                }).catch(error => {
-                    console.error('Ошибка отправки в Discord:', error);
-                    alert('Ошибка при отправке уведомления о покупке. Проверьте подключение.');
-                });
+                try {
+                    const response = await fetch('http://localhost:3000/api/send-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: cart, nickname, total })
+                    });
 
-                cart = [];
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartCount();
-                updateCartDisplay();
-                updateHistoryDisplay();
-            }
+                    if (response.ok) {
+                        alert('Заказ успешно отправлен!');
+                        cart = [];
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateCartCount();
+                        updateCartDisplay();
+                        updateHistoryDisplay();
+                        warningModal.style.display = 'flex';
+                        setTimeout(() => {
+                            closeWarning.classList.add('active');
+                        }, 5000);
+                    } else {
+                        alert('Ошибка при отправке заказа.');
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при отправке заказа. Проверьте подключение.');
+                }
+            }           
 
             // Очистка истории
             function clearPurchaseHistory() {
@@ -1536,41 +1543,39 @@
                 try {
                     let messageId = null;
                     if (file) {
+                        // Для отправки фото используем FormData
                         const formData = new FormData();
-                        formData.append('chat_id', telegramChatId);
                         formData.append('photo', file);
-                        formData.append('caption', review ? `Отзыв от ${nickname}: ${review}` : `Отзыв от ${nickname}`);
+                        formData.append('review', review);
+                        formData.append('nickname', nickname);
 
-                        const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+                        const response = await fetch('http://localhost:3000/api/send-review-photo', {
                             method: 'POST',
                             body: formData
                         });
                         const data = await response.json();
 
-                        if (!response.ok) {
-                            console.error('Ошибка отправки в Telegram:', response.status, data);
-                            alert('Ошибка при отправке отзыва в Telegram. Попробуйте позже.');
+                        if (response.ok) {
+                            messageId = data.messageId;
+                        } else {
+                            alert('Ошибка при отправке отзыва с фото.');
                             return;
                         }
-                        messageId = data.result.message_id;
                     } else if (review) {
-                        const telegramMessage = `Отзыв от ${nickname}: ${review}`;
-                        const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                        // Отправка текстового отзыва
+                        const response = await fetch('http://localhost:3000/api/send-review', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                chat_id: telegramChatId,
-                                text: telegramMessage
-                            })
+                            body: JSON.stringify({ review, nickname })
                         });
                         const data = await response.json();
 
-                        if (!response.ok) {
-                            console.error('Ошибка отправки в Telegram:', response.status, data);
-                            alert('Ошибка при отправке отзыва в Telegram. Попробуйте позже.');
+                        if (response.ok) {
+                            messageId = data.messageId;
+                        } else {
+                            alert('Ошибка при отправке отзыва.');
                             return;
                         }
-                        messageId = data.result.message_id;
                     }
 
                     if (messageId) {
@@ -1589,7 +1594,7 @@
                     alert('Спасибо за ваш отзыв!');
                     checkUserReview();
                 } catch (error) {
-                    console.error('Ошибка отправки отзыва:', error);
+                    console.error('Ошибка:', error);
                     alert('Ошибка при отправке отзыва. Проверьте подключение.');
                 }
             }
